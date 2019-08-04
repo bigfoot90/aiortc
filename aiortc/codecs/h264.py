@@ -92,6 +92,9 @@ class H264PayloadDescriptor:
 
 class H264Decoder:
     def __init__(self):
+        pass
+    """
+    def __init__(self):
         self.codec = av.CodecContext.create("h264", "r")
 
     def decode(self, encoded_frame):
@@ -105,7 +108,7 @@ class H264Decoder:
             return []
 
         return frames
-
+    """
 
 class H264Encoder:
     def __init__(self):
@@ -187,13 +190,17 @@ class H264Encoder:
         # TODO: write in a more pytonic way,
         # translate from: https://github.com/aizvorski/h264bitstream/blob/master/h264_nal.c#L134
         i = 0
+        
+
         while True:
             while (buf[i] != 0 or buf[i + 1] != 0 or buf[i + 2] != 0x01) and (
                 buf[i] != 0 or buf[i + 1] != 0 or buf[i + 2] != 0 or buf[i + 3] != 0x01
             ):
                 i += 1  # skip leading zero
                 if i + 4 >= len(buf):
-                    return
+                    # Did not find nal start
+                    print("Did not find nal start")
+                    return -1
             if buf[i] != 0 or buf[i + 1] != 0 or buf[i + 2] != 0x01:
                 i += 1
             i += 3
@@ -217,7 +224,9 @@ class H264Encoder:
 
         packages_iterator = iter(packages)
         package = next(packages_iterator, None)
+
         while package is not None:
+
             if len(package) > PACKET_MAX:
                 packetized_packages.extend(cls._packetize_fu_a(package))
                 package = next(packages_iterator, None)
@@ -244,6 +253,7 @@ class H264Encoder:
                 "level": "31",
                 "tune": "zerolatency",
             }
+            
 
         packages = self.codec.encode(frame)
         yield from self._split_bitstream(b"".join(p.to_bytes() for p in packages))
@@ -257,3 +267,20 @@ class H264Encoder:
 def h264_depayload(payload):
     descriptor, data = H264PayloadDescriptor.parse(payload)
     return data
+
+class H264CopyEncoder(H264Encoder):
+    def __init__(self):
+        super().__init__()
+        self.frame_index = 0
+        self.time_base = fractions.Fraction(1, MAX_FRAME_RATE)
+
+    def __pack(self, packages):
+        yield from self._split_bitstream(b"".join(p.to_bytes() for p in packages))
+
+
+    def encode(self, packet, force_keyframe=False):
+        timestamp = convert_timebase(packet.pts, self.time_base, VIDEO_TIME_BASE)
+        self.frame_index += 1
+        packages = self.__pack([packet])
+        packets_to_send = self._packetize(packages)
+        return packets_to_send, timestamp

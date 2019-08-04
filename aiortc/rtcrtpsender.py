@@ -245,7 +245,8 @@ class RTCRtpSender:
 
         # encode frame
         if self.__encoder is None:
-            self.__encoder = get_encoder(codec)
+            self.__encoder = get_encoder(codec, True)
+
         return await self.__loop.run_in_executor(
             None, self.__encoder.encode, frame, self.__force_keyframe
         )

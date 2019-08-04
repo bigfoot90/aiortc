@@ -9,9 +9,9 @@ from ..rtcrtpparameters import (
     RTCRtpHeaderExtensionParameters,
 )
 from .g711 import PcmaDecoder, PcmaEncoder, PcmuDecoder, PcmuEncoder
-from .h264 import H264Decoder, H264Encoder, h264_depayload
-from .opus import OpusDecoder, OpusEncoder
-from .vpx import Vp8Decoder, Vp8Encoder, vp8_depayload
+from .h264 import H264Decoder, H264Encoder, h264_depayload, H264CopyEncoder
+# from .opus import OpusDecoder, OpusEncoder
+# from .vpx import Vp8Decoder, Vp8Encoder, vp8_depayload
 
 PCMU_CODEC = RTCRtpCodecParameters(
     mimeType="audio/PCMU", clockRate=8000, channels=1, payloadType=0
@@ -97,9 +97,9 @@ def init_codecs():
 
 
 def depayload(codec, payload):
-    if codec.name == "VP8":
-        return vp8_depayload(payload)
-    elif codec.name == "H264":
+    #if codec.name == "VP8":
+    #    return vp8_depayload(payload)
+    if codec.name == "H264":
         return h264_depayload(payload)
     else:
         return payload
@@ -138,31 +138,37 @@ def get_capabilities(kind):
 def get_decoder(codec):
     mimeType = codec.mimeType.lower()
 
-    if mimeType == "audio/opus":
-        return OpusDecoder()
-    elif mimeType == "audio/pcma":
+    #if mimeType == "audio/opus":
+    #   return OpusDecoder()
+    if mimeType == "audio/pcma":
         return PcmaDecoder()
     elif mimeType == "audio/pcmu":
         return PcmuDecoder()
     elif mimeType == "video/h264":
         return H264Decoder()
-    elif mimeType == "video/vp8":
-        return Vp8Decoder()
+    #elif mimeType == "video/vp8":
+    #    return Vp8Decoder()
 
 
-def get_encoder(codec):
+def get_encoder(codec, copy_encoding = False):
     mimeType = codec.mimeType.lower()
 
-    if mimeType == "audio/opus":
-        return OpusEncoder()
-    elif mimeType == "audio/pcma":
+    #if mimeType == "audio/opus":
+    #    return OpusEncoder()
+
+    print("?")
+    if copy_encoding:
+        print("Was it copy encoding?")
+        return H264CopyEncoder()
+
+    if mimeType == "audio/pcma":
         return PcmaEncoder()
     elif mimeType == "audio/pcmu":
         return PcmuEncoder()
     elif mimeType == "video/h264":
         return H264Encoder()
-    elif mimeType == "video/vp8":
-        return Vp8Encoder()
+    #elif mimeType == "video/vp8":
+    #   return Vp8Encoder()
 
 
 def is_rtx(codec):
