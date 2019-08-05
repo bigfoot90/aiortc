@@ -243,6 +243,8 @@ class RTCRtpSender:
         # get frame
         frame = await self.__track.recv()
 
+        print("recv")
+
         # encode frame
         if self.__encoder is None:
             self.__encoder = get_encoder(codec, True)
@@ -282,6 +284,10 @@ class RTCRtpSender:
 
         sequence_number = random16()
         timestamp_origin = random32()
+
+        # Debug 
+        # counter = 0
+
         try:
             while True:
                 if not self.__track:
@@ -289,6 +295,8 @@ class RTCRtpSender:
                     continue
 
                 payloads, timestamp = await self._next_encoded_frame(codec)
+
+                print("-", timestamp)
                 timestamp = uint32_add(timestamp_origin, timestamp)
                 print(timestamp, "run-rtp")
                 for i, payload in enumerate(payloads):
