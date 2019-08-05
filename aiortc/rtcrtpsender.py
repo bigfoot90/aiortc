@@ -246,7 +246,8 @@ class RTCRtpSender:
         # encode frame
         if self.__encoder is None:
             self.__encoder = get_encoder(codec, True)
-
+        
+        print("returning frame")
         return await self.__loop.run_in_executor(
             None, self.__encoder.encode, frame, self.__force_keyframe
         )
@@ -289,7 +290,7 @@ class RTCRtpSender:
 
                 payloads, timestamp = await self._next_encoded_frame(codec)
                 timestamp = uint32_add(timestamp_origin, timestamp)
-
+                print(timestamp, "run-rtp")
                 for i, payload in enumerate(payloads):
                     packet = RtpPacket(
                         payload_type=codec.payloadType,
