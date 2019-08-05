@@ -283,4 +283,5 @@ class H264CopyEncoder(H264Encoder):
         self.frame_index += 1
         packages = self.__pack([packet])
         packets_to_send = self._packetize(packages)
+
         return packets_to_send, timestamp
