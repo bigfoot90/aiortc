@@ -243,13 +243,11 @@ class RTCRtpSender:
         # get frame
         frame = await self.__track.recv()
 
-        print("recv")
 
         # encode frame
         if self.__encoder is None:
             self.__encoder = get_encoder(codec, True)
         
-        print("returning frame")
         return await self.__loop.run_in_executor(
             None, self.__encoder.encode, frame, self.__force_keyframe
         )
@@ -284,21 +282,21 @@ class RTCRtpSender:
 
         sequence_number = random16()
         timestamp_origin = random32()
-
+        last_time = 0
         # Debug 
         # counter = 0
-
+        counter = 0
         try:
             while True:
                 if not self.__track:
                     await asyncio.sleep(0.02)
                     continue
-
+                t0 = time.time()
                 payloads, timestamp = await self._next_encoded_frame(codec)
-
-                print("-", timestamp)
+                t1 = time.time() - t0
                 timestamp = uint32_add(timestamp_origin, timestamp)
-                print(timestamp, "run-rtp")
+                start_time = time.time()
+                
                 for i, payload in enumerate(payloads):
                     packet = RtpPacket(
                         payload_type=codec.payloadType,
@@ -321,13 +319,22 @@ class RTCRtpSender:
                         packet.sequence_number % RTP_HISTORY_SIZE
                     ] = packet
                     packet_bytes = packet.serialize(self.__rtp_header_extensions_map)
-                    await self.transport._send_rtp(packet_bytes)
 
+                    t0 = time.time()
+                    await self.transport._send_rtp(packet_bytes)
+                    #print("Waited: " + str(time.time() - t0))
                     self.__ntp_timestamp = clock.current_ntp_time()
                     self.__rtp_timestamp = packet.timestamp
                     self.__octet_count += len(payload)
                     self.__packet_count += 1
                     sequence_number = uint16_add(sequence_number, 1)
+                counter += 1
+                if counter % 15 == 0:
+                    #print("fps: " + str(15 / (time.time() - last_time)))
+                    last_time = time.time()
+                    #print(time.time() - start_time)
+                    #print(t1)
+                    #print("---------------------------------------------------")
         except (asyncio.CancelledError, ConnectionError, MediaStreamError):
             pass
 
