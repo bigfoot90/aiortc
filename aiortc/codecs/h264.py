@@ -4,6 +4,7 @@ import math
 from itertools import tee
 from struct import pack, unpack_from
 
+import time
 import av
 
 from ..mediastreams import VIDEO_TIME_BASE, convert_timebase
@@ -116,6 +117,7 @@ class H264Encoder:
 
     @staticmethod
     def _packetize_fu_a(data):
+        t0 = time.time()
         available_size = PACKET_MAX - FU_A_HEADER_SIZE
         payload_size = len(data) - NAL_HEADER_SIZE
         num_packets = math.ceil(payload_size / available_size)
@@ -151,6 +153,7 @@ class H264Encoder:
             fu_header = fu_header_middle
         assert offset == len(data), "incorrect fragment data"
 
+        # print("1.", time.time() - t0)
         return packages
 
     @staticmethod
@@ -160,6 +163,7 @@ class H264Encoder:
 
         stap_header = NAL_TYPE_STAP_A | (data[0] & 0xE0)
 
+        t0 = time.time()
         payload = bytes()
         try:
             nalu = data  # with header
@@ -180,6 +184,7 @@ class H264Encoder:
         except StopIteration:
             nalu = None
 
+        # print("2.", time.time() - t0)
         if counter <= 1:
             return data, nalu
         else:
@@ -224,16 +229,25 @@ class H264Encoder:
 
         packages_iterator = iter(packages)
         package = next(packages_iterator, None)
+        cnt = 0
+
+        time1 = 0
+        time2 = 0
 
         while package is not None:
-
+            
             if len(package) > PACKET_MAX:
+                t0 = time.time()
                 packetized_packages.extend(cls._packetize_fu_a(package))
                 package = next(packages_iterator, None)
+                time1 += time.time() - t0
             else:
+                t0 = time.time()
                 packetized, package = cls._packetize_stap_a(package, packages_iterator)
                 packetized_packages.append(packetized)
+                time2 += time.time() - t0
 
+        print("Time1: {} Time2: {}".format(time1, time2))
         return packetized_packages
 
     def _encode_frame(self, frame, force_keyframe):
@@ -273,6 +287,9 @@ class H264CopyEncoder(H264Encoder):
         super().__init__()
         self.frame_index = 0
         self.time_base = fractions.Fraction(1, MAX_FRAME_RATE)
+        self.sum = 0
+
+        
 
     def __pack(self, packages):
         yield from self._split_bitstream(b"".join(p.to_bytes() for p in packages))
@@ -282,6 +299,13 @@ class H264CopyEncoder(H264Encoder):
         timestamp = convert_timebase(packet.pts, self.time_base, VIDEO_TIME_BASE)
         self.frame_index += 1
         packages = self.__pack([packet])
+
+        t2 = time.time()
         packets_to_send = self._packetize(packages)
+        t3 = time.time() - t2       
+        self.sum += t3
+        if self.frame_index % 30 == 0:
+            # print(100 * self.sum / 30)
+            self.sum = 0
 
         return packets_to_send, timestamp
