@@ -156,9 +156,7 @@ def get_encoder(codec, copy_encoding = False):
     #if mimeType == "audio/opus":
     #    return OpusEncoder()
 
-    print("?")
     if copy_encoding:
-        print("Was it copy encoding?")
         return H264CopyEncoder()
 
     if mimeType == "audio/pcma":

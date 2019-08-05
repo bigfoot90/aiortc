@@ -288,28 +288,20 @@ class H264CopyEncoder(H264Encoder):
 
     def __pack(self, packages):
         yield from self._split_stream(b"".join(p.to_bytes() for p in packages))
-    
+
     def _split_stream(self, buf):
         nal_type = (buf[3] % 0x1f) if buf[2] == 1 else (buf[4] & 0x1f)
-
-        print(nal_type)
-        if nal_type == 1:
+        # IDR frame or Non-IDR frame
+        if nal_type == 1 or nal_type == 5:
             yield buf[4:len(buf)]
         elif nal_type == 7:
-            yield from self._split_bitstream(buf)            
-        
+            yield from self._split_bitstream(buf)
+        else:
+            print("Unknown nal_type, using default method: ", nal_type)
+            yield from self._split_bitstream(buf)
 
     def encode(self, packet, force_keyframe=False):
         timestamp = convert_timebase(packet.pts, self.time_base, VIDEO_TIME_BASE)
-        self.frame_index += 1
-
         packages = self.__pack([packet])
-        t0 = time.time()
         packets_to_send = self._packetize(packages)
-        self.avg_time += time.time() - t0
-        if self.frame_index % 30 == 0:
-            avg = self.avg_time / 30
-            #print("||||||||||||:" +  str(avg) +  " fps: " + str(1 / avg))
-            self.avg_time = 0
-
         return packets_to_send, timestamp
