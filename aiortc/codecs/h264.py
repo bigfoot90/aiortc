@@ -298,6 +298,8 @@ class H264CopyEncoder(H264Encoder):
             yield from self._split_bitstream(buf)
         else:
             print("Unknown nal_type, using default method: ", nal_type)
+            print(buf[0:10])
+            print(len(buf))
             yield from self._split_bitstream(buf)
 
     def encode(self, packet, force_keyframe=False):
