@@ -246,7 +246,7 @@ class RTCRtpSender:
         # encode frame
         if self.__encoder is None:
             self.__encoder = get_encoder(codec, True)
-
+        
         return await self.__loop.run_in_executor(
             None, self.__encoder.encode, frame, self.__force_keyframe
         )
@@ -281,15 +281,15 @@ class RTCRtpSender:
 
         sequence_number = random16()
         timestamp_origin = random32()
+
         try:
             while True:
                 if not self.__track:
                     await asyncio.sleep(0.02)
                     continue
-
                 payloads, timestamp = await self._next_encoded_frame(codec)
                 timestamp = uint32_add(timestamp_origin, timestamp)
-
+                
                 for i, payload in enumerate(payloads):
                     packet = RtpPacket(
                         payload_type=codec.payloadType,
@@ -312,13 +312,14 @@ class RTCRtpSender:
                         packet.sequence_number % RTP_HISTORY_SIZE
                     ] = packet
                     packet_bytes = packet.serialize(self.__rtp_header_extensions_map)
-                    await self.transport._send_rtp(packet_bytes)
 
+                    await self.transport._send_rtp(packet_bytes)
                     self.__ntp_timestamp = clock.current_ntp_time()
                     self.__rtp_timestamp = packet.timestamp
                     self.__octet_count += len(payload)
                     self.__packet_count += 1
                     sequence_number = uint16_add(sequence_number, 1)
+              
         except (asyncio.CancelledError, ConnectionError, MediaStreamError):
             pass
 
