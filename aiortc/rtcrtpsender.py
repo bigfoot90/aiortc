@@ -287,8 +287,10 @@ class RTCRtpSender:
                 if not self.__track:
                     await asyncio.sleep(0.02)
                     continue
+                
                 payloads, timestamp = await self._next_encoded_frame(codec)
                 timestamp = uint32_add(timestamp_origin, timestamp)
+
                 
                 for i, payload in enumerate(payloads):
                     packet = RtpPacket(
