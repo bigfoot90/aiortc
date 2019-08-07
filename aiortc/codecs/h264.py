@@ -296,6 +296,6 @@ class H264CopyEncoder(H264Encoder):
 
     def encode(self, packet, force_keyframe=False):
         timestamp = convert_timebase(packet.pts, self.time_base, VIDEO_TIME_BASE)
-        split_packages = self._split_stream(packet)
+        split_packages = self._split_stream(packet.to_bytes())
         packets_to_send = self._packetize(split_packages)
         return packets_to_send, timestamp
