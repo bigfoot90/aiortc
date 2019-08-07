@@ -354,6 +354,26 @@ class RTCPeerConnection(AsyncIOEventEmitter):
             direction="sendrecv", kind=track.kind, sender_track=track
         )
         return transceiver.sender
+    
+        def removeTrack(self, track):
+        """
+            Finds and removes :class:`MediaStreamTrack` from the set of media
+            tracks.
+        """
+        # check state is valid
+        self.__assertNotClosed()
+        
+        transceiver_to_remove = None
+        for transceiver in self.__transceivers:
+            if transceiver.sender.track == track:
+                transceiver_to_remove = transceiver
+        
+        if transceiver is None:
+            raise InternalError('Could not find track to remove.')
+        
+        transceiver_to_remove.stop()
+        self.__transceivers.remove(transceiver_to_remove)
+        
 
     def addTransceiver(self, trackOrKind, direction="sendrecv"):
         """
