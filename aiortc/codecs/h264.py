@@ -10,7 +10,7 @@ from ..mediastreams import VIDEO_TIME_BASE, convert_timebase
 
 logger = logging.getLogger("codec.h264")
 
-MAX_FRAME_RATE = 30
+MAX_FRAME_RATE = 20
 PACKET_MAX = 1300
 
 NAL_TYPE_FU_A = 28
