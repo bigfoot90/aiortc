@@ -15,7 +15,7 @@ cffi_modules = [
 install_requires = [
     'aioice>=0.6.15,<0.7.0',
     'attrs',
-    #'av>=6.2.0,<7.0.0',
+    'av>=6.2.0,<7.0.0',
     'cffi>=1.0.0',
     'crc32c',
     'cryptography>=2.2',
@@ -49,9 +49,8 @@ setuptools.setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
     ],
-    # cffi_modules=cffi_modules,
-    # 'aiortc.codecs', 'aiortc.contrib'
-    packages=['aiortc'],
+    cffi_modules=cffi_modules,
+    packages=['aiortc', 'aiortc.codecs', 'aiortc.contrib'],
     setup_requires=['cffi>=1.0.0'],
     install_requires=install_requires,
 )

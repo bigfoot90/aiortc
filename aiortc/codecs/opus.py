@@ -3,7 +3,7 @@ import fractions
 
 from av import AudioFrame
 
-# from ._opus import ffi, lib
+from ._opus import ffi, lib
 
 CHANNELS = 2
 SAMPLE_RATE = 48000
@@ -13,9 +13,6 @@ TIME_BASE = fractions.Fraction(1, SAMPLE_RATE)
 
 
 class OpusDecoder:
-    def __init__(self):
-        pass
-    """
     def __init__(self):
         error = ffi.new("int *")
         self.decoder = lib.opus_decoder_create(SAMPLE_RATE, CHANNELS, error)
@@ -40,12 +37,8 @@ class OpusDecoder:
         )
         assert length == SAMPLES_PER_FRAME
         return [frame]
-    """
 
 class OpusEncoder:
-      def __init__(self):
-        pass
-    """
     def __init__(self):
         error = ffi.new("int *")
         self.encoder = lib.opus_encoder_create(
@@ -96,4 +89,3 @@ class OpusEncoder:
         assert length > 0
 
         return [self.buffer[0:length]], timestamp
-    """

@@ -52,7 +52,9 @@ def decoder_worker(loop, input_q, output_q):
             break
         codec, encoded_frame = task
 
-        if codec.name != codec_name:
+        if codec.name == codec_name:
+            decoder = get_decoder(codec, True)
+        else:
             decoder = get_decoder(codec)
             codec_name = codec.name
 
